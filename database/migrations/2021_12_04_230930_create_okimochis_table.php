@@ -18,8 +18,8 @@ class CreateOkimochisTable extends Migration
             $table->text('who');
             $table->string('title', 50);
             $table->text('message');
-            $table->text('u_name');
-            $table->integer('u_id')->unsigned();
+            $table->text('user_name');
+            $table->integer('user_id')->unsigned();
             $table->text('pic_name')->nullable();
             $table->datetime('open_time');
             $table->text('open_place_name');
