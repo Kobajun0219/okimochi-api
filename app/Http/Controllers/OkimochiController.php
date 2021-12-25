@@ -32,16 +32,6 @@ class OkimochiController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -50,7 +40,7 @@ class OkimochiController extends Controller
     public function store(Request $request)
     {
         //Validate data
-        $data = $request->only('who', 'title','message', 'open_time', 'open_place_name', 'open_place_latitude', 'open_place_longitude', 'public');
+        $data = $request->only('who', 'title', 'message', 'open_time', 'open_place_name', 'open_place_latitude', 'open_place_longitude', 'public');
         $validator = Validator::make($data, [
             'who' => 'required',
             'title' => 'required',
@@ -129,7 +119,7 @@ class OkimochiController extends Controller
     }
 
 
-//mypageへのアクセス
+    //mypageへのアクセス
     public function mypage()
     {
         $okimochi = $this->user->okimochis()->get();
@@ -176,18 +166,11 @@ class OkimochiController extends Controller
         // return redirect('/');
 
 
-        return $save;
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Okimochi  $okimochi
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Okimochi $okimochi)
-    {
-        //
+        return response()->json([
+            'success' => true,
+            'message' => 'success saved',
+            'save' => $save,
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -200,12 +183,16 @@ class OkimochiController extends Controller
     public function update(Request $request, Okimochi $okimochi)
     {
         //Validate data
-        $data = $request->only('name', 'sku', 'price', 'quantity');
+        $data = $request->only('who', 'title', 'message', 'open_time', 'open_place_name', 'open_place_latitude', 'open_place_longitude', 'public');
         $validator = Validator::make($data, [
-            'name' => 'required|string',
-            'sku' => 'required',
-            'price' => 'required',
-            'quantity' => 'required'
+            'who' => 'required',
+            'title' => 'required',
+            'message' => 'required',
+            'open_time' => 'required',
+            'open_place_name' => 'required',
+            'open_place_latitude' => 'required',
+            'open_place_longitude' => 'required',
+            'public' => 'required',
         ]);
 
         //Send failed response if request is not valid
@@ -213,18 +200,40 @@ class OkimochiController extends Controller
             return response()->json(['error' => $validator->messages()], 200);
         }
 
-        //Request is valid, update product
-        $okimochi = $okimochi->update([
-            'name' => $request->name,
-            'sku' => $request->sku,
-            'price' => $request->price,
-            'quantity' => $request->quantity
+        // //tag付けに関して
+        // // #(ハッシュタグ)で始まる単語を取得。結果は、$matchに多次元配列で代入される。
+        // preg_match_all('/#([a-zA-Z0-9０-９ぁ-んァ-ヶー一-龠 - 々 ー \']+)/u', $request->tags, $match);
+        // // $match[0]に#(ハッシュタグ)あり、$match[1]に#(ハッシュタグ)なしの結果が入ってくるので、$match[1]で#(ハッシュタグ)なしの結果のみを使います。
+        // $tags = [];
+        // foreach ($match[1] as $tag) {
+        //     $record = Tag::firstOrCreate(['tag_name' => $tag]); // firstOrCreateメソッドで、tags_tableのtag_nameカラムに該当のない$tagは新規登録される。
+        //     array_push($tags, $record); // $recordを配列に追加します(=$tags)
+        // };
+
+        // // 投稿に紐付けされるタグのidを配列化
+        // $tags_id = [];
+        // foreach ($tags as $tag) {
+        //     array_push($tags_id,
+        //         $tag->id
+        //     );
+        // };
+
+        //Request is valid, create new okimochi
+        $okimochi->update([
+            'who' => $request->who,
+            'title' => $request->title,
+            'message' => $request->message,
+            'pic_name' => $request->pic_name,
+            'open_time' => $request->open_time,
+            'open_place_name' => $request->open_place_name,
+            'open_place_latitude' => $request->open_place_latitude,
+            'open_place_longitude' => $request->open_place_longitude,
+            'public' => $request->public,
         ]);
 
-        //Product updated, return success response
+        //Product created, return success response
         return response()->json([
-            'success' => true,
-            'message' => 'Product updated successfully',
+            'message' => 'Update has been success',
             'data' => $okimochi
         ], Response::HTTP_OK);
     }
@@ -244,4 +253,17 @@ class OkimochiController extends Controller
             'message' => 'Product deleted successfully'
         ], Response::HTTP_OK);
     }
+
+    public function save_delete(Save_okimochi $id)
+    {
+        $id->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Save item deleted successfully'
+        ], Response::HTTP_OK);
+    }
+
+
+
 }
