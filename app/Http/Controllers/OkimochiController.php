@@ -9,6 +9,8 @@ use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Config;
 
 class OkimochiController extends Controller
 {
@@ -57,6 +59,31 @@ class OkimochiController extends Controller
             return response()->json(['error' => $validator->messages()], 200);
         }
 
+        //画像の扱いに関して
+        // if ($file = $request->pic_name) {
+        //     $fileName = $request->file('pic_name')->store('uploads', "public");
+        // } else {
+        //     //画像が登録されなかった時はから文字をいれる
+        //     $fileName = "";
+        // }
+
+
+        // dd(Config::get('filesystems'));
+
+        //画像投稿
+        if ($fileName = $request->pic_name) {
+
+            //保存するファイルに名前をつける
+            // $path = Storage::disk('s3')->putFile('/post', $fileName, 'public');
+            // dd($path);
+            // $file_name = Storage::disk('s3')->url($path);
+
+            $fileName = Storage::disk('s3')->putFile('/post', $fileName, 'public');
+        } else {
+            //画像が登録されなかった時はから文字をいれる
+            $fileName = "";
+        }
+
         // //tag付けに関して
         // // #(ハッシュタグ)で始まる単語を取得。結果は、$matchに多次元配列で代入される。
         // preg_match_all('/#([a-zA-Z0-9０-９ぁ-んァ-ヶー一-龠 - 々 ー \']+)/u', $request->tags, $match);
@@ -74,7 +101,7 @@ class OkimochiController extends Controller
         //         $tag->id
         //     );
         // };
-
+        // dd($fileName);
         //Request is valid, create new okimochi
         $okimochi = $this->user->okimochis()->create([
             'who' => $request->who,
@@ -82,7 +109,7 @@ class OkimochiController extends Controller
             'message' => $request->message,
             'user_name' => $this->user->name,
             'user_id' => $this->user->id,
-            'pic_name' => $request->pic_name,
+            'pic_name' => $fileName,
             'open_time' => $request->open_time,
             'open_place_name' => $request->open_place_name,
             'open_place_latitude' => $request->open_place_latitude,
@@ -200,6 +227,14 @@ class OkimochiController extends Controller
             return response()->json(['error' => $validator->messages()], 200);
         }
 
+        //画像の扱いに関して
+        if ($file = $request->pic_name) {
+            $fileName = $request->file('pic_name')->store('uploads', "public");
+        } else {
+            //画像が登録されなかった時はから文字をいれる
+            $fileName = "";
+        }
+
         // //tag付けに関して
         // // #(ハッシュタグ)で始まる単語を取得。結果は、$matchに多次元配列で代入される。
         // preg_match_all('/#([a-zA-Z0-9０-９ぁ-んァ-ヶー一-龠 - 々 ー \']+)/u', $request->tags, $match);
@@ -223,7 +258,7 @@ class OkimochiController extends Controller
             'who' => $request->who,
             'title' => $request->title,
             'message' => $request->message,
-            'pic_name' => $request->pic_name,
+            'pic_name' => $fileName,
             'open_time' => $request->open_time,
             'open_place_name' => $request->open_place_name,
             'open_place_latitude' => $request->open_place_latitude,
@@ -263,7 +298,4 @@ class OkimochiController extends Controller
             'message' => 'Save item deleted successfully'
         ], Response::HTTP_OK);
     }
-
-
-
 }
