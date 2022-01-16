@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\OkimochiController;
+use App\Http\Controllers\FriendController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,8 +21,8 @@ use App\Http\Controllers\OkimochiController;
 //     return $request->user();
 // });
 
-Route::post('login', [ApiController::class, 'authenticate']);//ログイン
-Route::post('register', [ApiController::class, 'register']);//会員登録
+Route::post('login', [ApiController::class, 'authenticate']); //ログイン
+Route::post('register', [ApiController::class, 'register']); //会員登録
 
 
 Route::group(['middleware' => ['jwt.verify']], function () {
@@ -37,9 +38,16 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
     // Route::get('search', [OkimochiController::class, 'search']);
 
-    Route::put('update/{okimochi}',  [OkimochiController::class, 'update']);//投稿の更新
+    Route::put('update/{okimochi}',  [OkimochiController::class, 'update']); //投稿の更新
     Route::delete('delete/{okimochi}',  [OkimochiController::class, 'destroy']); //削除機能
 
-    Route::get('logout', [ApiController::class, 'logout']);//ログアウト
-    Route::get('get_user', [ApiController::class, 'get_user']);//user情報の取得
+    Route::get('logout', [ApiController::class, 'logout']); //ログアウト
+    Route::get('get_user', [ApiController::class, 'get_user']); //user情報の取得
+
+    Route::get('request/{user_id}', [FriendController::class, 'request']); //友達申請
+    Route::get('request_list', [FriendController::class, 'friend_request_list']); //友達リクエスト
+    Route::get('friends_list', [FriendController::class, 'friends_list']); //友達一覧
+    Route::get('request_list/{id}', [FriendController::class, 'accept_friend_request']); //友達申請を受け入れる
+
+
 });

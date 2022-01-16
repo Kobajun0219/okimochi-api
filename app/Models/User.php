@@ -60,4 +60,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Save_okimochi::class);
     }
+
+    public function firends()
+    {
+        return $this->hasMany(Friend::class);
+    }
 }
