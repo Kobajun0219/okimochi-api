@@ -20,7 +20,7 @@ class FriendController extends Controller
         $this->user = JWTAuth::parseToken()->authenticate();
     }
 
-    public function request($id)
+    public function request($user_id)
     {
 
         $friend = Friend::firstOrCreate([
@@ -51,17 +51,15 @@ class FriendController extends Controller
 
         $friends= Friend::where('receive_id', $this->user->id)->where('status', 1)->get();
 
-        return response()->json(['friends' => $friends]);
+        return response()->json(['friend_request' => $friends]);
     }
 
     public function accept_friend_request(Friend $id)
     {
-        $friend =
+        $id =
         $id->update([
             'status' => 0,
         ]);
-
-        return response()->json(['friends' => $id]);
 
         return response()->json([
             'message' => 'accept friend request',

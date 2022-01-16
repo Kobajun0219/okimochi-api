@@ -44,10 +44,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('logout', [ApiController::class, 'logout']); //ログアウト
     Route::get('get_user', [ApiController::class, 'get_user']); //user情報の取得
 
-    Route::get('request/{id}', [FriendController::class, 'request']); //友達申請
-    Route::get('request_list', [FriendController::class, 'friend_request_list']); //
+    Route::get('request/{user_id}', [FriendController::class, 'request']); //友達申請
+    Route::get('request_list', [FriendController::class, 'friend_request_list']); //友達リクエスト
     Route::get('friends_list', [FriendController::class, 'friends_list']); //友達一覧
-    Route::get('request_list/{id}', [FriendController::class, 'accept_friend_request']); //友達一覧
+    Route::get('request_list/{id}', [FriendController::class, 'accept_friend_request']); //友達申請を受け入れる
 
 
 });
