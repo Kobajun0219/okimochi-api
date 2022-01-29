@@ -9,6 +9,8 @@ use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Config;
 
 class OkimochiController extends Controller
 {
@@ -79,6 +81,17 @@ class OkimochiController extends Controller
         //     );
         // };
 
+        //画像の扱いに関して
+        if ($file = $request->file('pic_name')){
+            // $fileName = $request->file('pic_name')->store('uploads', "public");
+            // $fileName = Storage::disk('s3')->put('/post', $file, 'public');
+            // dd(Config::get('filesystems'));
+            $fileName = Storage::disk('s3')->putFile('/post',$file, 'public');
+        } else {
+            //画像が登録されなかった時はから文字をいれる
+            $fileName = "";
+        }
+
         //Request is valid, create new okimochi
         $okimochi = $this->user->okimochis()->create([
             'who' => $request->who,
@@ -86,7 +99,7 @@ class OkimochiController extends Controller
             'message' => $request->message,
             'user_name' => $this->user->name,
             'user_id' => $this->user->id,
-            'pic_name' => $request->pic_name,
+            'pic_name' => $fileName,
             'open_time' => $request->open_time,
             'open_place_name' => $request->open_place_name,
             'open_place_latitude' => $request->open_place_latitude,
