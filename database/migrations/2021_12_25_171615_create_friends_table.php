@@ -15,8 +15,8 @@ class CreateFriendsTable extends Migration
     {
         Schema::create('friends', function (Blueprint $table) {
             $table->id();
-            $table->BigInteger('request_id')->unsigned();
-            $table->BigInteger('receive_id')->unsigned();
+            $table->BigInteger('request_user_id')->unsigned();
+            $table->BigInteger('receive_user_id')->unsigned();
             $table->BigInteger('status');//0友達 1申請中 2申請拒否
             $table->timestamps();
         });

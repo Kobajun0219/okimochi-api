@@ -25,8 +25,12 @@ class OkimochiController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
+
         $okimochi = Okimochi::orderBy('created_at', 'desc')->get();
         return response()->json(['okimochi' => $okimochi]);
     }
@@ -40,8 +44,7 @@ class OkimochiController extends Controller
     public function store(Request $request)
     {
         //Validate data
-        $data = $request->only('who', 'title', 'message', 'open_time', 'open_place_name', 'open_place_latitude', 'open_place_longitude', 'public');
-        $validator = Validator::make($data, [
+        $validator = Validator::make($request->all(), [
             'who' => 'required',
             'title' => 'required',
             'message' => 'required',
@@ -50,6 +53,7 @@ class OkimochiController extends Controller
             'open_place_latitude' => 'required',
             'open_place_longitude' => 'required',
             'public' => 'required',
+            'token' => 'required',
         ]);
 
         //Send failed response if request is not valid
@@ -120,8 +124,12 @@ class OkimochiController extends Controller
 
 
     //mypageへのアクセス
-    public function mypage()
+    public function mypage(Request $request)
     {
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
+
         $okimochi = $this->user->okimochis()->get();
 
         //自分の保存した投稿を取得。

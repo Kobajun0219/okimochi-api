@@ -20,7 +20,7 @@ class CreateOkimochisTable extends Migration
             $table->text('message');
             $table->text('user_name');
             $table->integer('user_id')->unsigned();
-            $table->text('pic_name')->nullable();
+            $table->string('pic_name')->nullable();
             $table->datetime('open_time');
             $table->text('open_place_name');
             $table->float('open_place_latitude', 12, 8);

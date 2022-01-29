@@ -118,4 +118,15 @@ class ApiController extends Controller
 
         return response()->json(['user' => $user]);
     }
+
+    public function get_all_user(Request $request)
+    {
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
+
+        $users = User::all();
+
+        return response()->json(['user' => $users]);
+    }
 }
