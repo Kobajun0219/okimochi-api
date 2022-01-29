@@ -20,15 +20,19 @@ class FriendController extends Controller
         $this->user = JWTAuth::parseToken()->authenticate();
     }
 
-    public function request($user_id)
+    public function request(Request $request)
     {
+        $this->validate($request, [
+            'token' => 'required',
+            'user_id' => 'required'
+        ]);
 
         $friend = Friend::firstOrCreate([
-            'request_id' => $this->user->id,
-            'receive_id' => $id,
+            'request_user_id' => $this->user->id,
+            'receive_user_id' => $request->user_id,
         ], [
-            'request_id' => $this->user->id,
-            'receive_id' => $id,
+            'request_user_id' => $this->user->id,
+            'receive_user_id' => $request->user_id,
             'status' => 1,
         ]);
 
@@ -41,7 +45,15 @@ class FriendController extends Controller
 
     public function friends_list()
     {
-        $friends = Friend::where('receive_id', $this->user->id)->where('request_id', $this->user->id)->orWhere('status', 0)->get();
+        $friends = Friend::where('receive_user_id', $this->user->id)->where('request_user_id', $this->user->id)->orWhere('status', 0)->get();
+
+        foreach ($friends as $friend) {
+            if ($friend->request_user_id == $this->user->id) {
+                $friend->receive_user;
+            }else {
+                $friend->request_user;
+            }
+        }
 
         return response()->json(['friends_list' => $friends]);
     }
@@ -49,14 +61,13 @@ class FriendController extends Controller
     public function friend_request_list()
     {
 
-        $friends= Friend::where('receive_id', $this->user->id)->where('status', 1)->get();
+        $friends= Friend::where('receive_user_id', $this->user->id)->where('status', 1)->get();
 
         return response()->json(['friend_request' => $friends]);
     }
 
     public function accept_friend_request(Friend $id)
     {
-        $id =
         $id->update([
             'status' => 0,
         ]);
