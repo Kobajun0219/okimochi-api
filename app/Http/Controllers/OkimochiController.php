@@ -83,9 +83,6 @@ class OkimochiController extends Controller
 
         //画像の扱いに関して
         if ($file = $request->file('pic_name')){
-            // $fileName = $request->file('pic_name')->store('uploads', "public");
-            // $fileName = Storage::disk('s3')->put('/post', $file, 'public');
-            // dd(Config::get('filesystems'));
             $fileName = Storage::disk('s3')->putFile('/post',$file, 'public');
         } else {
             //画像が登録されなかった時はから文字をいれる
@@ -204,8 +201,7 @@ class OkimochiController extends Controller
     public function update(Request $request, Okimochi $okimochi)
     {
         //Validate data
-        $data = $request->only('who', 'title', 'message', 'open_time', 'open_place_name', 'open_place_latitude', 'open_place_longitude', 'public');
-        $validator = Validator::make($data, [
+        $validator = Validator::make($request->all(), [
             'who' => 'required',
             'title' => 'required',
             'message' => 'required',
@@ -239,18 +235,24 @@ class OkimochiController extends Controller
         //     );
         // };
 
-        //Request is valid, create new okimochi
-        $okimochi->update([
-            'who' => $request->who,
-            'title' => $request->title,
-            'message' => $request->message,
-            'pic_name' => $request->pic_name,
-            'open_time' => $request->open_time,
-            'open_place_name' => $request->open_place_name,
-            'open_place_latitude' => $request->open_place_latitude,
-            'open_place_longitude' => $request->open_place_longitude,
-            'public' => $request->public,
-        ]);
+        //画像の扱いに関して
+        if ($file = $request->file('pic_name')){
+            $fileName = Storage::disk('s3')->putFile('/post',$file, 'public');
+        } else {
+            //画像が登録されなかった時はから文字をいれる
+            $fileName = "";
+        }
+
+        $okimochi->who = $request->who;
+        $okimochi->title = $request->title;
+        $okimochi->message = $request->message;
+        $okimochi->pic_name = $fileName;
+        $okimochi->open_time = $request->open_time;
+        $okimochi->open_place_name = $request->open_place_name;
+        $okimochi->open_place_latitude = $request->open_place_latitude;
+        $okimochi->open_place_longitude = $request->open_place_longitude;
+        $okimochi->public = $request->public;
+        $okimochi->save();
 
         //Product created, return success response
         return response()->json([

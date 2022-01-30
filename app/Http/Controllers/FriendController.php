@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateFriendRequest;
 use App\Models\Friend;
 use Illuminate\Http\Request;
-
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,6 +15,7 @@ class FriendController extends Controller
 
     protected $user;
 
+
     public function __construct()
     {
         $this->user = JWTAuth::parseToken()->authenticate();
@@ -22,17 +23,12 @@ class FriendController extends Controller
 
     public function request(Request $request)
     {
-        $this->validate($request, [
-            'token' => 'required',
-            'user_id' => 'required'
-        ]);
-
         $friend = Friend::firstOrCreate([
             'request_user_id' => $this->user->id,
-            'receive_user_id' => $request->user_id,
+            'receive_user_id' => $request->receive_user_id,
         ], [
             'request_user_id' => $this->user->id,
-            'receive_user_id' => $request->user_id,
+            'receive_user_id' => $request->receive_user_id,
             'status' => 1,
         ]);
 

@@ -50,7 +50,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('friends_list', [FriendController::class, 'friends_list']); //友達一覧
     Route::post('request_list/{id}', [FriendController::class, 'accept_friend_request']); //友達申請を受け入れる
 
-    Route::put('update/{okimochi}',  [OkimochiController::class, 'update']); //プロフィールアップデート
+    Route::put('update_profile',  [ApiController::class, 'update_profile']); //プロフィールアップデート
 
 
 });

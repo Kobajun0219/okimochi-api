@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiController extends Controller
 {
+
     public function register(Request $request)
     {
         //Validate data
@@ -33,11 +34,30 @@ class ApiController extends Controller
             'password' => bcrypt($request->password)
         ]);
 
-        //User created, return success response
+        $credentials = $request->only('email', 'password');
+
+        //Create token
+        try {
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Login credentials are invalid.',
+                ], 400);
+            }
+        } catch (JWTException $e) {
+            return $credentials;
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not create token.',
+            ], 500);
+        }
+
+        //Token created, return with success response and jwt token
         return response()->json([
             'success' => true,
             'message' => 'User created successfully',
-            'data' => $user
+            'data' => $user,
+            'token' => $token,
         ], Response::HTTP_OK);
     }
 
@@ -57,7 +77,7 @@ class ApiController extends Controller
         }
 
         //Request is validated
-        //Crean token
+        //Create token
         try {
             if (!$token = JWTAuth::attempt($credentials)) {
                 return response()->json([
@@ -129,4 +149,51 @@ class ApiController extends Controller
 
         return response()->json(['user' => $users]);
     }
+
+    public function update_profile(Request $request)
+    {
+        //Validate data
+        $data = $request->only('name', 'email', 'password','pic_name','token');
+        $validator = Validator::make($data, [
+            'name' => 'string',
+            'email' => 'email',
+            'password' => 'string|min:6|max:50',
+            'token' => 'required'
+        ]);
+
+        $user  = JWTAuth::parseToken()->authenticate();
+
+        //Send failed response if request is not valid
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->messages()], 200);
+        }
+
+        //画像の扱いに関して
+        if ($file = $request->file('pic_name')){
+            $fileName = Storage::disk('s3')->putFile('/post',$file, 'public');
+        } else {
+            //pic_nameが来なかった時には元の値を入れる
+            $fileName = $user->pic_name;
+        }
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->pic_name = $fileName;
+        $user->save();
+
+        //User created, return success response
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated successfully',
+            'data' => $user
+        ], Response::HTTP_OK);
+    }
+
+    // public function check_and_put_data($model, $data){
+    //     if($data){
+    //         $model = $data;
+    //     }
+    // }
+
+
 }

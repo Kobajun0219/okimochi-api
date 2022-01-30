@@ -17,6 +17,7 @@ class CreateFriendsTable extends Migration
             $table->id();
             $table->BigInteger('request_user_id')->unsigned();
             $table->BigInteger('receive_user_id')->unsigned();
+            $table->unique(['request_user_id', 'receive_user_id'],'unique_friend_id');
             $table->BigInteger('status');//0友達 1申請中 2申請拒否
             $table->timestamps();
         });
