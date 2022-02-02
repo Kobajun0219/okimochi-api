@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Okimochi;
 use App\Models\Save_okimochi;
 use Illuminate\Http\Request;
+use App\Http\Requests\TokenValidator;
+use App\Http\Requests\PostValidator;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,22 +19,34 @@ class OkimochiController extends Controller
 
     protected $user;
 
+    /**
+     * check token is valid
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function __construct()
     {
-        $this->user = JWTAuth::parseToken()->authenticate();
+        try {
+            if (!$this->user = JWTAuth::parseToken()->authenticate()) {
+                return response()->json([
+                    'message' => 'Login credentials are invalid.',
+                ], 400);
+            }
+        } catch (JWTException $e) {
+            return response()->json([
+                'message' => 'Could not recognize the token.',
+            ], 500);
+        }
     }
 
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\TokenValidator  $request
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(TokenValidator $request)
     {
-        $this->validate($request, [
-            'token' => 'required'
-        ]);
-
         $okimochi = Okimochi::orderBy('created_at', 'desc')->get();
         return response()->json(['okimochi' => $okimochi]);
     }
@@ -43,26 +57,8 @@ class OkimochiController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(PostValidator $request)
     {
-        //Validate data
-        $validator = Validator::make($request->all(), [
-            'who' => 'required',
-            'title' => 'required',
-            'message' => 'required',
-            'open_time' => 'required',
-            'open_place_name' => 'required',
-            'open_place_latitude' => 'required',
-            'open_place_longitude' => 'required',
-            'public' => 'required',
-            'token' => 'required',
-        ]);
-
-        //Send failed response if request is not valid
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->messages()], 200);
-        }
-
         // //tag付けに関して
         // // #(ハッシュタグ)で始まる単語を取得。結果は、$matchに多次元配列で代入される。
         // preg_match_all('/#([a-zA-Z0-9０-９ぁ-んァ-ヶー一-龠 - 々 ー \']+)/u', $request->tags, $match);
@@ -106,8 +102,7 @@ class OkimochiController extends Controller
 
         //Product created, return success response
         return response()->json([
-            'success' => true,
-            'message' => 'post success',
+            'message' => 'posted successfully',
             'data' => $okimochi
         ], Response::HTTP_OK);
     }
@@ -124,7 +119,6 @@ class OkimochiController extends Controller
 
         if (!$okimochi) {
             return response()->json([
-                'success' => false,
                 'message' => 'Sorry, product not found.'
             ], 400);
         }
@@ -133,12 +127,14 @@ class OkimochiController extends Controller
     }
 
 
-    //mypageへのアクセス
-    public function mypage(Request $request)
+    /**
+     * access to myPage
+     *
+     * @param  \App\Http\Requests\TokenValidator $request
+     * @return \Illuminate\Http\Response
+     */
+    public function mypage(TokenValidator $request)
     {
-        $this->validate($request, [
-            'token' => 'required'
-        ]);
 
         $okimochi = $this->user->okimochis()->get();
 
@@ -148,12 +144,18 @@ class OkimochiController extends Controller
             $save->okimochi;
         }
         return response()->json([
-            'success' => true,
-            'myPost' => $okimochi,
+            'my_posts' => $okimochi,
             'saves' => $saves
         ], Response::HTTP_OK);
     }
 
+
+    /**
+     * save others post(okimochi)
+     *
+     * @param  \App\Http\Requests\TokenValidator $request
+     * @return \Illuminate\Http\Response
+     */
     public function save_okimochi($id)
     {
         //同じデータの場合にはindexに返す
@@ -161,7 +163,6 @@ class OkimochiController extends Controller
         foreach ($alls as $all) {
             if ($all->okimochi_id == $id && $all->user_id == $this->user->id) {
                 return response()->json([
-                    'success' => false,
                     'message' => 'already saved'
                 ], 400);
             }
@@ -176,18 +177,9 @@ class OkimochiController extends Controller
             'user_id'   => $this->user->id
         ]);
 
-        // //テーブルへ値を入れる
-        // $saves = new Pastel_user; //app/Pastelを入れる
-        // $saves->pastel_id = $id;
-        // $saves->user_id = Auth::user()->id;
-        // $saves->save();
-        // return redirect('/');
-
-
         return response()->json([
-            'success' => true,
-            'message' => 'success saved',
-            'save' => $save,
+            'message' => 'saved successfully',
+            'data' => $save,
         ], Response::HTTP_OK);
     }
 
@@ -198,43 +190,8 @@ class OkimochiController extends Controller
      * @param  \App\Models\Okimochi  $okimochi
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Okimochi $okimochi)
+    public function update(PostValidator $request, Okimochi $okimochi)
     {
-        //Validate data
-        $validator = Validator::make($request->all(), [
-            'who' => 'required',
-            'title' => 'required',
-            'message' => 'required',
-            'open_time' => 'required',
-            'open_place_name' => 'required',
-            'open_place_latitude' => 'required',
-            'open_place_longitude' => 'required',
-            'public' => 'required',
-        ]);
-
-        //Send failed response if request is not valid
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->messages()], 200);
-        }
-
-        // //tag付けに関して
-        // // #(ハッシュタグ)で始まる単語を取得。結果は、$matchに多次元配列で代入される。
-        // preg_match_all('/#([a-zA-Z0-9０-９ぁ-んァ-ヶー一-龠 - 々 ー \']+)/u', $request->tags, $match);
-        // // $match[0]に#(ハッシュタグ)あり、$match[1]に#(ハッシュタグ)なしの結果が入ってくるので、$match[1]で#(ハッシュタグ)なしの結果のみを使います。
-        // $tags = [];
-        // foreach ($match[1] as $tag) {
-        //     $record = Tag::firstOrCreate(['tag_name' => $tag]); // firstOrCreateメソッドで、tags_tableのtag_nameカラムに該当のない$tagは新規登録される。
-        //     array_push($tags, $record); // $recordを配列に追加します(=$tags)
-        // };
-
-        // // 投稿に紐付けされるタグのidを配列化
-        // $tags_id = [];
-        // foreach ($tags as $tag) {
-        //     array_push($tags_id,
-        //         $tag->id
-        //     );
-        // };
-
         //画像の扱いに関して
         if ($file = $request->file('pic_name')){
             $fileName = Storage::disk('s3')->putFile('/post',$file, 'public');
@@ -262,27 +219,36 @@ class OkimochiController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified post from Okimochi.
      *
      * @param  \App\Models\Okimochi  $okimochi
      * @return \Illuminate\Http\Response
      */
     public function destroy(Okimochi $okimochi)
     {
-        $okimochi->delete();
+        if (!$okimochi->user_id  == $this->user->id) {
+            return response()->json([
+                'message' => 'The post is not yours'
+            ], Response::HTTP_OK);
+        }
 
+        $okimochi->delete();
         return response()->json([
-            'success' => true,
             'message' => 'Product deleted successfully'
         ], Response::HTTP_OK);
     }
 
+    /**
+     * Remove specified save_post in Save_okimochi.
+     *
+     * @param  \App\Models\Save_okimochi  $id
+     * @return \Illuminate\Http\Response
+     */
     public function save_delete(Save_okimochi $id)
     {
         $id->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Save item deleted successfully'
         ], Response::HTTP_OK);
     }

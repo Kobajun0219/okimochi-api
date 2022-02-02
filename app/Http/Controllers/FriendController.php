@@ -9,20 +9,56 @@ use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\TokenValidator;
 
 class FriendController extends Controller
 {
 
     protected $user;
 
-
+    /**
+     * check token is valid
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function __construct()
     {
-        $this->user = JWTAuth::parseToken()->authenticate();
+        try {
+            if (!$this->user = JWTAuth::parseToken()->authenticate()) {
+                return response()->json([
+                    'message' => 'Login credentials are invalid.',
+                ], 400);
+            }
+        } catch (JWTException $e) {
+            return response()->json([
+                'message' => 'Could not recognize the token.',
+            ], 500);
+        }
     }
 
+    /**
+     * send friend request
+     *
+     * @param  \App\Http\Requests\Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function request(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'token' => 'required',
+            'receive_user_id' => 'required'
+        ]);
+
+        //Send failed response if request is not valid
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->messages()
+            ], 200);
+        }
+
+        // where('receive_user_id',$this->user->id)
+
+        try {
         $friend = Friend::firstOrCreate([
             'request_user_id' => $this->user->id,
             'receive_user_id' => $request->receive_user_id,
@@ -31,17 +67,30 @@ class FriendController extends Controller
             'receive_user_id' => $request->receive_user_id,
             'status' => 1,
         ]);
+        } catch(\Exception $ex) {
+            return response()->json([
+                'error' => $ex->getMessage()
+            ], 200);
+        }
 
         return response()->json([
-            'success' => true,
             'message' => 'request has been success',
             'data' => $friend
         ], Response::HTTP_OK);
     }
 
-    public function friends_list()
+    /**
+     * show all friend request list which specific user recieve
+     *
+     * @param  \App\Http\Requests\TokenValidator $request
+     * @return \Illuminate\Http\Response
+     */
+    public function friends_list(TokenValidator $request)
     {
-        $friends = Friend::where('receive_user_id', $this->user->id)->where('request_user_id', $this->user->id)->orWhere('status', 0)->get();
+        $friends = Friend::where('receive_user_id', $this->user->id)
+                            ->where('request_user_id', $this->user->id)
+                            ->orWhere('status', 0)
+                            ->get();
 
         foreach ($friends as $friend) {
             if ($friend->request_user_id == $this->user->id) {
@@ -54,10 +103,25 @@ class FriendController extends Controller
         return response()->json(['friends_list' => $friends]);
     }
 
-    public function friend_request_list()
+    /**
+     * show all friend request list which specific user receive
+     *
+     * @param  \App\Http\Requests\Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function friend_request_list(TokenValidator $request)
     {
 
         $friends= Friend::where('receive_user_id', $this->user->id)->where('status', 1)->get();
+
+        // $user_id = $this->user->id;
+        foreach ($friends as $friend) {
+            if ($friend->request_user_id == $this->user->id) {
+                $friend->receive_user;
+            }else {
+                $friend->request_user;
+            }
+        }
 
         return response()->json(['friend_request' => $friends]);
     }

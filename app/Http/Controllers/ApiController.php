@@ -8,10 +8,17 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ApiController extends Controller
 {
 
+    /**
+     * Create new user if created return token.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function register(Request $request)
     {
         //Validate data
@@ -61,6 +68,12 @@ class ApiController extends Controller
         ], Response::HTTP_OK);
     }
 
+    /**
+     * login and if success return token.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function authenticate(Request $request)
     {
         $credentials = $request->only('email', 'password');
@@ -100,6 +113,12 @@ class ApiController extends Controller
         ]);
     }
 
+    /**
+     * Logout.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function logout(Request $request)
     {
         //valid credential
@@ -128,6 +147,12 @@ class ApiController extends Controller
         }
     }
 
+    /**
+     * Get user information.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function get_user(Request $request)
     {
         $this->validate($request, [
@@ -139,6 +164,12 @@ class ApiController extends Controller
         return response()->json(['user' => $user]);
     }
 
+    /**
+     * Get all user information.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function get_all_user(Request $request)
     {
         $this->validate($request, [
@@ -150,18 +181,23 @@ class ApiController extends Controller
         return response()->json(['user' => $users]);
     }
 
+    /**
+     * update user information in User.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function update_profile(Request $request)
     {
         //Validate data
         $data = $request->only('name', 'email', 'password','pic_name','token');
+        $user  = JWTAuth::parseToken()->authenticate();
         $validator = Validator::make($data, [
             'name' => 'string',
-            'email' => 'email',
+            'email' => ['email',Rule::unique('users')->ignore($user->id)],
             'password' => 'string|min:6|max:50',
             'token' => 'required'
         ]);
-
-        $user  = JWTAuth::parseToken()->authenticate();
 
         //Send failed response if request is not valid
         if ($validator->fails()) {
@@ -183,17 +219,8 @@ class ApiController extends Controller
 
         //User created, return success response
         return response()->json([
-            'success' => true,
             'message' => 'User updated successfully',
             'data' => $user
         ], Response::HTTP_OK);
     }
-
-    // public function check_and_put_data($model, $data){
-    //     if($data){
-    //         $model = $data;
-    //     }
-    // }
-
-
 }
