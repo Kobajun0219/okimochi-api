@@ -61,7 +61,6 @@ class ApiController extends Controller
 
         //Token created, return with success response and jwt token
         return response()->json([
-            'success' => true,
             'message' => 'User created successfully',
             'data' => $user,
             'token' => $token,
@@ -172,13 +171,28 @@ class ApiController extends Controller
      */
     public function get_all_user(Request $request)
     {
-        $this->validate($request, [
-            'token' => 'required'
+        $validator = Validator::make($request->all(), [
+            'token' => 'required',
+            'admin' => 'required'
         ]);
 
-        $users = User::all();
+        //Send failed response if request is not valid
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->messages()
+            ], 200);
+        }
 
-        return response()->json(['user' => $users]);
+        if ($request->admin == "admin") {
+            $users = User::all();
+            return response()->json(['user' => $users]);
+
+        }
+
+        return response()->json([
+            'message' => 'You do not have permission to access'
+        ], 400);
+
     }
 
     /**

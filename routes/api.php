@@ -27,12 +27,12 @@ Route::post('register', [ApiController::class, 'register']); //会員登録
 Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('/index', [OkimochiController::class, 'index']); //一覧取得
     Route::post('post', [OkimochiController::class, 'store']); //投稿
-    Route::post('mypage', [OkimochiController::class, 'mypage']); //自分の投稿情報を取得
-    Route::post('detail/{id}', [OkimochiController::class, 'show']); //指定のidの投稿を表示(自分の投稿のみ)
-    Route::post('save/{id}', [OkimochiController::class, 'save_okimochi']); //指定のidの投稿を保存
-    Route::delete('save/delete/{id}', [OkimochiController::class, 'save_delete']); //指定のidの投稿を保存を削除
     Route::put('update/{okimochi}', [OkimochiController::class, 'update']); //投稿の更新
-    Route::delete('delete/{okimochi}',  [OkimochiController::class, 'destroy']); //削除機能
+    Route::delete('delete',  [OkimochiController::class, 'destroy']); //投稿の削除機能
+    Route::post('mypage', [OkimochiController::class, 'mypage']); //自分のマイページでの情報を取得
+    Route::post('detail/{id}', [OkimochiController::class, 'show']); //指定のidの投稿を表示(自分の投稿のみ)
+    Route::post('save', [OkimochiController::class, 'save_okimochi']); //指定のidの投稿を保存
+    Route::delete('save/delete', [OkimochiController::class, 'save_delete']); //指定のidの投稿を保存を削除
 
     Route::post('get_user', [ApiController::class, 'get_user']); //user情報の取得
     Route::post('get_all_user', [ApiController::class, 'get_all_user']); //全user情報の取得

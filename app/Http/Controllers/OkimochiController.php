@@ -153,12 +153,26 @@ class OkimochiController extends Controller
     /**
      * save others post(okimochi)
      *
-     * @param  \App\Http\Requests\TokenValidator $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function save_okimochi($id)
+    public function save_okimochi(Request $request)
     {
-        //同じデータの場合にはindexに返す
+        $validator = Validator::make($request->all(), [
+            'save_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        //Send failed response if request is not valid
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->messages()
+            ], 200);
+        }
+
+        $id = $request->save_id;
+
+        //同じデータの場合には返す
         $alls = Save_okimochi::all();
         foreach ($alls as $all) {
             if ($all->okimochi_id == $id && $all->user_id == $this->user->id) {
@@ -177,16 +191,17 @@ class OkimochiController extends Controller
             'user_id'   => $this->user->id
         ]);
 
+
         return response()->json([
             'message' => 'saved successfully',
-            'data' => $save,
+            'data' => $save->okimochi,
         ], Response::HTTP_OK);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  App\Http\Requests\PostValidator  $request
      * @param  \App\Models\Okimochi  $okimochi
      * @return \Illuminate\Http\Response
      */
@@ -221,11 +236,25 @@ class OkimochiController extends Controller
     /**
      * Remove the specified post from Okimochi.
      *
-     * @param  \App\Models\Okimochi  $okimochi
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Okimochi $okimochi)
+    public function destroy(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'post_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        //Send failed response if request is not valid
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->messages()
+            ], 200);
+        }
+
+        $okimochi = Okimochi::where("id",$request->post_id)->first();
+
         if (!$okimochi->user_id  == $this->user->id) {
             return response()->json([
                 'message' => 'The post is not yours'
@@ -241,12 +270,28 @@ class OkimochiController extends Controller
     /**
      * Remove specified save_post in Save_okimochi.
      *
-     * @param  \App\Models\Save_okimochi  $id
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function save_delete(Save_okimochi $id)
+    public function save_delete(Request $request)
     {
-        $id->delete();
+        $validator = Validator::make($request->all(), [
+            'save_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        //Send failed response if request is not valid
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->messages()
+            ], 200);
+        }
+
+        if(!Save_okimochi::where("id",$request->save_id)->delete() == 1){
+            return response()->json([
+            'message' => 'Does not exist specific item'
+            ], Response::HTTP_OK);
+        }
 
         return response()->json([
             'message' => 'Save item deleted successfully'
