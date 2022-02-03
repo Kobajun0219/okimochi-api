@@ -56,8 +56,6 @@ class FriendController extends Controller
             ], 200);
         }
 
-        // where('receive_user_id',$this->user->id)
-
         try {
         $friend = Friend::firstOrCreate([
             'request_user_id' => $this->user->id,
@@ -71,6 +69,12 @@ class FriendController extends Controller
             return response()->json([
                 'error' => $ex->getMessage()
             ], 200);
+        }
+
+        if ($friend->request_user_id == $this->user->id) {
+            $friend->receive_user;
+        }else {
+            $friend->request_user;
         }
 
         return response()->json([
@@ -131,6 +135,12 @@ class FriendController extends Controller
         $id->update([
             'status' => 0,
         ]);
+
+        if ($id->request_user_id == $this->user->id) {
+            $id->receive_user;
+        }else {
+            $id->request_user;
+        }
 
         return response()->json([
             'message' => 'accept friend request',
